@@ -1,46 +1,29 @@
-import React from 'react'
-import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import data from '../MOCK_DATA.json'
+import React, { useState } from 'react'
+import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 
-function SimpleTable() {
+function SimpleTable({data, columns}) {
 
-    const columns = [
-        {
-            header: 'ID',
-            accessorKey: 'id',
-            footer: 'Mi ID'
-        },
-        {
-            header: 'Name',
-            accessorKey: 'name',
-            footer: 'Mi name'
-        },
-        {
-            header: 'Lastname',
-            accessorKey: 'lastname',
-            footer: 'Mi lastname'
-        },
-        {
-            header: 'Email',
-            accessorKey: 'email',
-            footer: 'Mi email'
-        },
-        {
-            header: 'Country',
-            accessorKey: 'country',
-            footer: 'Mi country'
-        },
-        {
-            header: 'Day of Birth',
-            accessorKey: 'dataofbirth',
-            footer: 'Mi day of birth'
-        }
-    ]
+    const [sorting, setSorting] = useState([])
+    const [filtering, setFiltering] = useState('')
 
-    const table = useReactTable({data, columns, getCoreRowModel: getCoreRowModel()})
+    const table = useReactTable({
+        data, 
+        columns, 
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        state: {sorting, globalFilter: filtering,}, onSortingChange: setSorting,
+        getFilteredRowModel: getFilteredRowModel(),
+        onGlobalFilterChange: setFiltering,
+    })
 
   return (
     <div>
+        <input 
+            type='text'
+            value={filtering}
+            onChange={(e) => setFiltering(e.target.value)}
+        />
       <table>
         <thead>
             {
@@ -48,8 +31,16 @@ function SimpleTable() {
                     <tr key={headerGroup.id}>
                         {
                             headerGroup.headers.map(header => (
-                                <th key={header.id}>
-                                    {flexRender(header.column.columnDef.header, header.getContext())}
+                                <th key={header.id}
+                                    onClick={header.column.getToggleSortingHandler()}
+                                >
+                                    {flexRender(
+                                        header.column.columnDef.header, 
+                                        header.getContext()
+                                        )}
+                                    {
+                                        {'asc': '⬆️', 'desc': '⬇️'}[header.column.getIsSorted() ?? null]
+                                    }
                                 </th>
                             ))
                         }
@@ -88,6 +79,18 @@ function SimpleTable() {
             }
         </tfoot>
       </table>
+      <button onClick={() => table.setPageIndex(0)}>
+        Primera pagina
+      </button>
+      <button onClick={() => table.previousPage()}>
+        Pagina anterior
+      </button>
+      <button onClick={() => table.nextPage()}>
+        Pagina siguiente
+      </button>
+      <button onClick={() => table.setPageIndex(table.getPageCount() - 1)}>
+        Ultima pagina
+      </button>
     </div>
   )
 }
